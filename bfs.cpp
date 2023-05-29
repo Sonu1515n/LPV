@@ -1,62 +1,144 @@
 #include<iostream>
-#include<bits/stdc++.h>
-#include<omp.h>
+#include<stdlib.h>
+#include<queue>
 using namespace std;
-vector<bool> v;
-vector<vector<int>> g;
-void bfsTraversal(int b)
+
+
+class node
 {
- queue<int> q; //Declare a queue to store all the nodes connected to b
- q.push(b); //Insert b to queue
- v[b]=true; //mark b as visited
- cout<<"\nThe BFS Traversal is: ";
- double start=omp_get_wtime();
- while(!q.empty())
- {
- int a = q.front();
- q.pop(); //delete the first element form queue
- #pragma omp parallel
- for(auto j=g[a].begin();j!=g[a].end();j++)
- {
- if (!v[*j])
- {
- v[*j] = true;
- q.push(*j);
- }
- }
- cout<<a<<" ";
- }
- double end=omp_get_wtime();
- double time=end-start;
- cout<<"\n\nTime taken => "<<time<<endl;
-}void makeEdge(int a, int b)
+   public:
+
+    node *left, *right;
+    int data;
+
+};
+
+class Breadthfs
 {
- g[a].push_back(b); //an edge from a to b (directed graph)
+
+ public:
+
+ node *insert(node *, int);
+ void bfs(node *);
+
+};
+
+
+node *insert(node *root, int data)
+// inserts a node in tree
+{
+
+    if(!root)
+    {
+
+   	 root=new node;
+   	 root->left=NULL;
+   	 root->right=NULL;
+   	 root->data=data;
+   	 return root;
+    }
+
+    queue<node *> q;
+    q.push(root);
+
+    while(!q.empty())
+    {
+
+   	 node *temp=q.front();
+   	 q.pop();
+
+   	 if(temp->left==NULL)
+   	 {
+
+   		 temp->left=new node;
+   		 temp->left->left=NULL;
+   		 temp->left->right=NULL;
+   		 temp->left->data=data;
+   		 return root;
+   	 }
+   	 else
+   	 {
+
+   	 q.push(temp->left);
+
+   	 }
+
+   	 if(temp->right==NULL)
+   	 {
+
+   		 temp->right=new node;
+   		 temp->right->left=NULL;
+   		 temp->right->right=NULL;
+   		 temp->right->data=data;
+   		 return root;
+   	 }
+   	 else
+   	 {
+
+   	 q.push(temp->right);
+
+   	 }
+
+    }
+
 }
-int main()
+
+
+void bfs(node *head)
 {
- omp_set_num_threads(4);
- int n,e;
- cout<<"Consider first vertex => 0"<<endl;
- cout<<"\nEnter the number of vertices: ";
- cin >> n;
- cout<<"\nEnter the number of edges: ";
- cin>>e;
- v.assign(n, false);
- g.assign(n, vector<int>());
- int a, b, i;
- cout << "\nEnter the edges with source and target vetex: "<<endl;
- for(i=0;i<e;i++)
- {
- cin>>a>>b;
- makeEdge(a, b);
- }
- for (i=0;i<n;i++)
- {
- if (!v[i]) //if the node i is unvisited
- {
- bfsTraversal(i);
- }
- }
- return 0;
+
+   	 queue<node*> q;
+   	 q.push(head);
+
+   	 int qSize;
+
+   	 while (!q.empty())
+   	 {
+   		 qSize = q.size();
+   		 #pragma omp parallel for
+            	//creates parallel threads
+   		 for (int i = 0; i < qSize; i++)
+   		 {
+   			 node* currNode;
+   			 #pragma omp critical
+   			 {
+   			   currNode = q.front();
+   			   q.pop();
+   			   cout<<"\t"<<currNode->data;
+
+   			 }// prints parent node
+   			 #pragma omp critical
+   			 {
+   			 if(currNode->left)// push parent's left node in queue
+   				 q.push(currNode->left);
+   			 if(currNode->right)
+   				 q.push(currNode->right);
+   			 }// push parent's right node in queue
+
+   		 }
+   	 }
+
+}
+
+int main(){
+
+    node *root=NULL;
+    int data;
+    char ans;
+
+    do
+    {
+   	 cout<<"\n enter data=>";
+   	 cin>>data;
+
+   	 root=insert(root,data);
+
+   	 cout<<"do you want insert one more node?";
+   	 cin>>ans;
+
+    }while(ans=='y'||ans=='Y');
+
+    bfs(root);
+
+    return 0;
 }
